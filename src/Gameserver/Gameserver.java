@@ -94,7 +94,7 @@ public class Gameserver {
      * @param msg
      */
     void broadcast(String msg){
-        for(Task thread:threatList)
+        for(Task thread:threadList)
             thread.sendMsg(msg);
     }
     
@@ -138,6 +138,7 @@ public class Gameserver {
         public void run(){
             sendMsg("连接成功，请输入用户名：");
             while(true){
+                try{
                 String msg=recevreader.readLine();
                 if(username.equals(""))
                     login(msg);
@@ -145,6 +146,10 @@ public class Gameserver {
                     quit();
                 else
                     game(msg);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+                
             }
 
                 
