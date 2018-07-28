@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Collections;
+import java.util.Random;
 /**
  *
  * @author WATER
@@ -35,6 +36,7 @@ public class Gameserver {
      * @throws Exception
      */    
     public Gameserver()throws Exception{
+        totalchip=5000;
         gameserver=new ServerSocket(SERVER_PORT);
     }
     
@@ -61,7 +63,7 @@ public class Gameserver {
         public void run(){
             while(true)
             {
-                getrandom();
+                begin();
                 broadcast("开始啦！大家快下注啦！赌大小啊！翻倍赢啊！");
                 try{
                 sleep(30000);
@@ -75,11 +77,17 @@ public class Gameserver {
         }
     }
      /**
-     * getrandom
-     * 随机数生成
+     * begin
+     * 开局
      */    
-    void getrandom(){
-        ;
+    void begin(){
+        Random ran=new Random();
+        randnum=ran.nextInt(6)+1;//随机数生成
+        System.out.println(randnum+"点");
+        for(Task thread: threadList ){
+            thread.wagerchip=0;
+            thread.sendMsg("您有"+thread.chip+"个筹码，请下注：");
+        }
     }   
     /**
      * resultcal
@@ -114,10 +122,10 @@ public class Gameserver {
      * 用户线程
      */
     class Task extends Thread{
-        private String username;
+        public String username;
         private Socket clientsocket;
-        private int chip,wagerchip;
-        private char DorX;
+        public int chip,wagerchip;
+        public char DorX;
         private Writer sendwriter;
         private BufferedReader recevreader;
         
@@ -152,11 +160,8 @@ public class Gameserver {
                 }catch(Exception e){
                     quit();
                     break;
-                }
-                
+                }           
             }
-
-                
         }
                 
         public void sendMsg(String msg)
@@ -207,6 +212,7 @@ public class Gameserver {
                     wagerchip=0;
                 }
                 else{
+                    chip=chip-wagerchip;
                     if(DorX=='D'|DorX=='d')
                         broadcast(username+"下注"+temp[0]+"个"+"压大");
                     else
