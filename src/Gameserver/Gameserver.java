@@ -142,12 +142,16 @@ public class Gameserver {
                 String msg=recevreader.readLine();
                 if(username.equals(""))
                     login(msg);
-                else if(msg.equals(END_MARK))
+                else if(msg.equals(END_MARK)){
+                    sendMsg("quit");
                     quit();
+                    break;
+                }
                 else
                     game(msg);
                 }catch(Exception e){
-                    e.printStackTrace();
+                    quit();
+                    break;
                 }
                 
             }
@@ -161,7 +165,7 @@ public class Gameserver {
                 sendwriter.write(msg+'\n');
                 sendwriter.flush();
             }catch(Exception e){
-                e.printStackTrace();
+                quit();
             }
         } 
         
@@ -179,7 +183,16 @@ public class Gameserver {
         }
         
         private void quit(){
-            ;
+            if(userSet.contains(username))userSet.remove(username);
+            if(threadList.contains(this))threadList.remove(this);
+            broadcast(username+"悄悄的走了，不带走一个筹码。");
+            try{
+                if(sendwriter!= null)sendwriter.close();
+                if(sendwriter!= null)recevreader.close();
+            }catch(Exception ex){
+                ex.printStackTrace();
+            }
+            
         }
         
         private void game(String msg){
