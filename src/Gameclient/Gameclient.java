@@ -48,15 +48,14 @@ public class Gameclient {
             sendwriter=new OutputStreamWriter(gamesocket.getOutputStream(),"UTF-8");
             keyin=new BufferedReader (new InputStreamReader(System.in));
             String inputMsg="";
-            while(!quit_flag)
+            while(true)
             {
                 inputMsg=keyin.readLine();
                 sendwriter.write(inputMsg+'\n');
                 sendwriter.flush();  
             }
         }catch(Exception e){
-            if(quit_flag!=true)
-                quit();
+            quit();
         }
     }
     
@@ -69,20 +68,18 @@ public class Gameclient {
         public void run(){
             try{
                 recevreader=new BufferedReader(new InputStreamReader(gamesocket.getInputStream(),"UTF-8"));
-                while(!quit_flag){
+                while(true){
                      String Msgbuff=recevreader.readLine();
                      if(!END_MARK.equals(Msgbuff))
                          System.out.println(Msgbuff);
                      else{
-                         if(quit_flag!=true)
-                            quit();
+                         quit();
                          break;
                      }
                          
                 }
             }catch(Exception e){
-              if(quit_flag!=true)
-                quit();
+              quit();
             }
         }
     }
@@ -90,16 +87,20 @@ public class Gameclient {
      * quit()
      * 退出函数
      */
-    void quit(){
-        try{
-                if(recevreader!=null)recevreader.close();
-                if(sendwriter!=null)sendwriter.close();
-                if(keyin!=null)keyin.close();
-                if(gamesocket!=null)gamesocket.close();
+    private synchronized void  quit(){
+        if(quit_flag!=true){
+            quit_flag=true;
+            try{
+                    if(keyin!=null)keyin.close();
+                    if(recevreader!=null)recevreader.close();
+                    if(sendwriter!=null)sendwriter.close();
+                    if(gamesocket!=null)gamesocket.close();
                 }catch(Exception ex){
-                    ex.printStackTrace();
+                        ex.printStackTrace();
                 }
-        quit_flag=true;
+        }
+        else
+            return;
     }
     
     
