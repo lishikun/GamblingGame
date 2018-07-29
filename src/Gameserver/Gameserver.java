@@ -79,15 +79,19 @@ public class Gameserver {
             boolean next=true;
             while(next)
             {
-                begin();
+                synchronized(gameserver){
+                    begin();
+                }
                 try{
                 sleep(30000);
                 }catch(Exception e){
                     e.printStackTrace();
                 }
-                broadcast("停止下注啦！都不要动啦！马上要开啦！开！开！开！");
-                broadcast("本轮产生点数为"+randnum+"点");
-                next=resultcal();
+                synchronized(gameserver){
+                    broadcast("停止下注啦！都不要动啦！马上要开啦！开！开！开！");
+                    broadcast("本轮产生点数为"+randnum+"点");
+                    next=resultcal();
+                }
             }
             quitserver();
         }
@@ -236,18 +240,21 @@ public class Gameserver {
             sendMsg("连接成功，请输入用户名：");
             while(!quit_flag){
                 try{
-                String msg=recevreader.readLine();
-                if(username.equals(""))
-                    login(msg);
-                else if(msg.equals(END_MARK)){
-                    sendMsg("quit");
-                    if(quit()){
-                        broadcast(username+"悄悄的走了，不带走一个筹码1。"); 
+                    String msg=recevreader.readLine();
+                    if(username.equals(""))
+                        login(msg);
+                    else if(msg.equals(END_MARK)){
+                        sendMsg("quit");
+                        if(quit()){
+                            broadcast(username+"悄悄的走了，不带走一个筹码1。"); 
+                        }
+                        break;
                     }
-                    break;
-                }
-                else
-                    game(msg);
+                    else{
+                        synchronized(gameserver){
+                            game(msg);
+                        }
+                    }
                 }catch(Exception e){
                     if(quit()){
                         broadcast(username+"悄悄的走了，不带走一个筹码2。"); 
