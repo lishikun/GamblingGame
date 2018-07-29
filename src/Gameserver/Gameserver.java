@@ -27,7 +27,6 @@ public class Gameserver {
     private Set<String> userSet = new HashSet<String>();//用户名集合
     private List<Task> threadList = new ArrayList<Task>();//用户线程集合
     private ServerSocket gameserver;
-    private boolean next;
     private int randnum,totalchip;
     
     /**
@@ -37,7 +36,6 @@ public class Gameserver {
      */    
     public Gameserver()throws Exception{
         totalchip=200;
-        next=true;
         gameserver=new ServerSocket(SERVER_PORT);
     }
     
@@ -48,20 +46,21 @@ public class Gameserver {
      */
     public void load() {
         new timer().start();
-
-        while (next) {
-            try{
+        try{
+        while (true) {
             Socket socket = gameserver.accept();
             new Task(socket).start();
-            }catch(Exception e){
-                try{
-                    gameserver.close();
-                }catch(Exception ex){
-                    ex.printStackTrace();
-                }
-                break;
-            }
+
         }
+        }catch(Exception e){
+            quitserver();
+        }
+    }
+    /**
+     * quitserver
+     * 退出服务器
+     */
+    private void quitserver(){
         if(gameserver!=null)
             try{
                 gameserver.close();
@@ -77,6 +76,7 @@ public class Gameserver {
     class timer extends Thread{
         @Override
         public void run(){
+            boolean next=true;
             while(next)
             {
                 begin();
@@ -89,6 +89,7 @@ public class Gameserver {
                 broadcast("本轮产生点数为"+randnum+"点");
                 next=resultcal();
             }
+            quitserver();
         }
     }
      /**
@@ -170,7 +171,10 @@ public class Gameserver {
             System.out.println("上一轮庄家赢了"+detchip+"个筹码，总共剩"+totalchip+"个筹码");
         if(totalchip<=0){
             broadcast("庄家运气怎么这么差，竟然输光了，掀桌子不玩儿了！大家散场啦！");
-            for(Task thread: threadList){
+            threadListtemp.clear();
+            for(Task thread: threadList)
+                threadListtemp.add(thread);
+            for(Task thread: threadListtemp){
                 thread.sendMsg("quit");
                 thread.quit();
             }
@@ -285,7 +289,7 @@ public class Gameserver {
                 if(threadList.contains(this))threadList.remove(this);
                 try{
                     if(sendwriter!= null)sendwriter.close();
-                    if(sendwriter!= null)recevreader.close();
+                    if(recevreader!= null)recevreader.close();
                 }catch(Exception ex){
                     ex.printStackTrace();
                 }
