@@ -36,7 +36,7 @@ public class Gameserver {
      * @throws Exception
      */    
     public Gameserver()throws Exception{
-        totalchip=5000;
+        totalchip=200;
         next=true;
         gameserver=new ServerSocket(SERVER_PORT);
     }
@@ -80,14 +80,13 @@ public class Gameserver {
             while(next)
             {
                 begin();
-                broadcast("开始啦！大家快下注啦！赌大小啊！翻倍赢啊！");
                 try{
                 sleep(30000);
                 }catch(Exception e){
                     e.printStackTrace();
                 }
                 broadcast("停止下注啦！都不要动啦！马上要开啦！开！开！开！");
-                broadcast("本次产生点数为"+randnum+"点");
+                broadcast("本轮产生点数为"+randnum+"点");
                 next=resultcal();
             }
         }
@@ -99,7 +98,10 @@ public class Gameserver {
     void begin(){
         Random ran=new Random();
         randnum=ran.nextInt(6)+1;//随机数生成
+        System.out.println("-----------------------------------");
         System.out.println(randnum+"点");
+        broadcast("-----------------------------------");
+        broadcast("开始啦！大家快下注啦！赌大小啊！翻倍赢啊！");
         for(Task thread: threadList ){
             thread.wagerchip=0;
             thread.sendMsg("您有"+thread.chip+"个筹码，请下注：");
@@ -111,8 +113,11 @@ public class Gameserver {
      */    
     boolean resultcal(){
         int detchip=0;
+        List<Task> threadListtemp = new ArrayList<Task>();
+        for(Task thread: threadList)
+            threadListtemp.add(thread);
         if(randnum>3){
-            for(Task thread: threadList){
+            for(Task thread: threadListtemp){
                 int userwager=thread.wagerchip;
                 if(userwager>0){
                     if(thread.DorX=='D'|thread.DorX=='d'){
@@ -134,7 +139,7 @@ public class Gameserver {
             }
         }
         else{
-            for(Task thread: threadList){
+            for(Task thread: threadListtemp){
                 int userwager=thread.wagerchip;
                 if(userwager>0){
                     if(thread.DorX=='X'|thread.DorX=='x'){
@@ -165,7 +170,7 @@ public class Gameserver {
             System.out.println("上一轮庄家赢了"+detchip+"个筹码，总共剩"+totalchip+"个筹码");
         if(totalchip<=0){
             broadcast("庄家运气怎么这么差，竟然输光了，掀桌子不玩儿了！大家散场啦！");
-            for(Task thread:threadList){
+            for(Task thread: threadList){
                 thread.sendMsg("quit");
                 thread.quit();
             }
@@ -232,19 +237,16 @@ public class Gameserver {
                     login(msg);
                 else if(msg.equals(END_MARK)){
                     sendMsg("quit");
-                    if(quit_flag!=true){
-                        quit(); 
-                        broadcast(username+"悄悄的走了，不带走一个筹码。"); 
+                    if(quit()){
+                        broadcast(username+"悄悄的走了，不带走一个筹码1。"); 
                     }
                     break;
                 }
                 else
                     game(msg);
                 }catch(Exception e){
-                        sendMsg("quit");
-                    if(quit_flag!=true){
-                        quit();
-                        broadcast(username+"悄悄的走了，不带走一个筹码。"); 
+                    if(quit()){
+                        broadcast(username+"悄悄的走了，不带走一个筹码2。"); 
                     }
                     break;
                 }           
@@ -257,10 +259,8 @@ public class Gameserver {
                 sendwriter.write(msg+'\n');
                 sendwriter.flush();
             }catch(Exception e){
-                if(quit_flag!=true){
-                   quit();
-                   broadcast(username+"悄悄的走了，不带走一个筹码。"); 
-                }
+                if(quit())
+                   broadcast(username+"悄悄的走了，不带走一个筹码3。"); 
                 
             }
         } 
@@ -278,18 +278,25 @@ public class Gameserver {
             }
         }
         
-        private void quit(){
-            if(userSet.contains(username))userSet.remove(username);
-            if(threadList.contains(this))threadList.remove(this);
-            try{
-                if(sendwriter!= null)sendwriter.close();
-                if(sendwriter!= null)recevreader.close();
-            }catch(Exception ex){
-                ex.printStackTrace();
+        private synchronized boolean quit(){ 
+            if(quit_flag!=true){
+                quit_flag=true;
+                if(userSet.contains(username))userSet.remove(username);
+                if(threadList.contains(this))threadList.remove(this);
+                try{
+                    if(sendwriter!= null)sendwriter.close();
+                    if(sendwriter!= null)recevreader.close();
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }
+                return true;
             }
-            quit_flag=true;
+            else
+                return false;
+
             
         }
+        
         
         private void game(String msg){
             if(!msg.matches("\\d+\\s+[DdXx]"))
@@ -305,9 +312,9 @@ public class Gameserver {
                 else{
                     chip=chip-wagerchip;
                     if(DorX=='D'|DorX=='d')
-                        broadcast(username+"下注"+temp[0]+"个"+"压大");
+                        broadcast(username+"下注"+temp[0]+"个，"+"压大");
                     else
-                        broadcast(username+"下注"+temp[0]+"个"+"压小");
+                        broadcast(username+"下注"+temp[0]+"个，"+"压小");
                 }
             }
         }
@@ -316,8 +323,9 @@ public class Gameserver {
     /**
      * main()入口
      * 运行服务器程序
+     * @param args
      */
-    public static void main() {
+    public static void main(String[] args) {
         try{
             Gameserver server = new Gameserver();
             server.load();   
