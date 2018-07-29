@@ -94,7 +94,46 @@ public class Gameserver {
      * 筹码计算
      */    
     void resultcal(){
-        ;
+        int detchip=0;
+        if(randnum>3){
+            for(Task thread: threadList){
+                int userwager=thread.wagerchip;
+                if(userwager>0){
+                    if(thread.DorX=='D'|thread.DorX=='d'){
+                        thread.sendMsg("你赢了，返还双倍共"+userwager*2+"个筹码。");
+                        thread.chip+=userwager*2;
+                        detchip=detchip-userwager;
+                    }
+                    else{
+                        thread.sendMsg("你输了，"+userwager+"个筹码都归了庄家。");
+                        detchip=detchip+userwager;
+                    }
+                }
+            }
+        }
+        else{
+            for(Task thread: threadList){
+                int userwager=thread.wagerchip;
+                if(userwager>0){
+                    if(thread.DorX=='X'|thread.DorX=='x'){
+                        thread.sendMsg("你赢了，返还双倍共"+userwager*2+"个筹码。");
+                        thread.chip+=userwager*2;
+                        detchip=detchip-userwager;
+                    }
+                    else{
+                        thread.sendMsg("你输了，"+userwager+"个筹码都归了庄家。");
+                        detchip=detchip+userwager;
+                    }
+                }
+            }
+        }
+        totalchip+=detchip;
+        if(detchip<0){
+            detchip=0-detchip;
+            System.out.println("上一轮庄家输了"+detchip+"个筹码，总共剩"+totalchip+"个筹码");
+        }
+        else
+            System.out.println("上一轮庄家赢了"+detchip+"个筹码，总共剩"+totalchip+"个筹码");
     }
     /**
      * broadcast
