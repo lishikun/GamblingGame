@@ -50,9 +50,11 @@ public class Gameclient {
             String inputMsg="";
             while(true)
             {
-                inputMsg=keyin.readLine();
-                sendwriter.write(inputMsg+'\n');
-                sendwriter.flush();  
+                if(keyin.ready()){
+                    inputMsg=keyin.readLine();
+                    sendwriter.write(inputMsg+'\n');
+                    sendwriter.flush();
+                }
             }
         }catch(Exception e){
             quit();
@@ -91,7 +93,7 @@ public class Gameclient {
         if(quit_flag!=true){
             quit_flag=true;
             try{
-                    if(keyin!=null)keyin.close();
+                    if(keyin!=null){keyin.close();}
                     if(recevreader!=null)recevreader.close();
                     if(sendwriter!=null)sendwriter.close();
                     if(gamesocket!=null)gamesocket.close();
