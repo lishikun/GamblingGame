@@ -22,13 +22,13 @@ import java.util.Random;
  */
 public class Gameserver {
     private final int SERVER_PORT = 12345;
-    private final String END_MARK = "quit";
+    private final String END_MARK = "quit";//用户退出标志
     
     private Set<String> userSet = new HashSet<String>();//用户名集合
     private List<Task> threadList = new ArrayList<Task>();//用户线程集合
     private ServerSocket gameserver;
-    private boolean stopwager;
-    private int randnum,totalchip;
+    private boolean stopwager;//是否停止下注标志，是为true，否为false
+    private int randnum,totalchip;//randum为产生的随机数，totalchip为庄家筹码
     
     /**
      * Gameserver() 
@@ -222,44 +222,52 @@ public class Gameserver {
      * 用户线程
      */
     class Task extends Thread{
-        public String username;
+        public String username;//用户名
         private Socket clientsocket;
-        public int chip,wagerchip;
-        public char DorX;
-        private Writer sendwriter;
-        private BufferedReader recevreader;
-        public boolean quit_flag;
+        public int chip,wagerchip;//chip为该用户所有筹码，wagerchip为该用户所压筹码
+        public char DorX;//下注大小，D、d为大，X、x为小
+        private Writer sendwriter;//发送消息字符输出流
+        private BufferedReader recevreader;//接收消息字符输入流；
+        public boolean quit_flag;//是否已退出标志，是为true，否为false
         
+        /**
+         * Task
+         * 构造函数,初始化参数
+         * @param socket 
+         */
         public Task(Socket socket){
             try{
             chip=100;
             wagerchip=0;
             quit_flag=false;
             clientsocket=socket;
-            username="";
+            username="";//用户命名之前初始化为空字符串
             recevreader=new BufferedReader(new InputStreamReader(clientsocket.getInputStream(),"UTF-8"));
             sendwriter=new OutputStreamWriter(clientsocket.getOutputStream(),"UTF-8");
             }catch(Exception e){
                 e.printStackTrace();
             }
         }
-        
+        /**
+         * run
+         * 根据用户发来的数据，执行login()，quit()或者game()
+         */
         @Override
         public void run(){
             sendMsg("连接成功，请输入用户名：");
-            while(!quit_flag){
+            while(true){
                 try{
                     String msg=recevreader.readLine();
-                    if(username.equals(""))
+                    if(username.equals(""))//判断是否未命名
                         login(msg);
-                    else if(msg.equals(END_MARK)){
+                    else if(msg.equals(END_MARK)){//判断是否用户主动退出
                         sendMsg("quit");
                         if(quit()){
                             broadcast(username+"悄悄的走了，不带走一个筹码。"); 
                         }
                         break;
                     }
-                    else{
+                    else{//否则执行游戏函数
                         if(!stopwager)
                             game(msg);
                         else
@@ -273,7 +281,11 @@ public class Gameserver {
                 }           
             }
         }
-                
+        /**
+         * sendMsg
+         * 向该用户发送消息
+         * @param msg 
+         */        
         public void sendMsg(String msg)
         {
             try{
@@ -285,7 +297,11 @@ public class Gameserver {
                 
             }
         } 
-        
+        /**
+         * login
+         * 根据输入用户名执行登陆操作
+         * @param msg 
+         */
         private void login(String msg){
             if(!msg.matches("\\S+"))
                 sendMsg("无效输入，请重新输入用户名：");
@@ -298,7 +314,11 @@ public class Gameserver {
                 sendMsg("您有100个筹码，请下注：");
             }
         }
-        
+        /**
+         * quit
+         * 退出函数，返回值为之前是否已经退出
+         * @return 
+         */
         private synchronized boolean quit(){ 
             if(quit_flag!=true){
                 quit_flag=true;
@@ -318,12 +338,16 @@ public class Gameserver {
             
         }
         
-        
+        /**
+         * game
+         * 游戏函数，根据输入压铸筹码
+         * @param msg 
+         */
         private void game(String msg){
-            if(!msg.matches("\\d+\\s+[DdXx]"))
+            if(!msg.matches("\\d+\\s+[DdXx]"))//判断是否符合语法规则
                 sendMsg("你说啥？要按套路出牌哦！您有"+chip+"个筹码，请下注：");
             else{
-                String temp[]=msg.split("\\s+");
+                String temp[]=msg.split("\\s+");//根据空格分割字符串
                 wagerchip=Integer.parseInt(temp[0]);
                 DorX=temp[1].charAt(0);
                 if(wagerchip>chip){
