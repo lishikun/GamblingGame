@@ -27,6 +27,7 @@ public class Gameserver {
     private Set<String> userSet = new HashSet<String>();//用户名集合
     private List<Task> threadList = new ArrayList<Task>();//用户线程集合
     private ServerSocket gameserver;
+    private boolean stopwager;
     private int randnum,totalchip;
     
     /**
@@ -35,7 +36,8 @@ public class Gameserver {
      * @throws Exception
      */    
     public Gameserver()throws Exception{
-        totalchip=200;
+        totalchip=5000;
+        stopwager=false;
         gameserver=new ServerSocket(SERVER_PORT);
     }
     
@@ -79,19 +81,17 @@ public class Gameserver {
             boolean next=true;
             while(next)
             {
-                synchronized(gameserver){
-                    begin();
-                }
+                begin();
+                stopwager=false;
                 try{
                 sleep(30000);
                 }catch(Exception e){
                     e.printStackTrace();
                 }
-                synchronized(gameserver){
-                    broadcast("停止下注啦！都不要动啦！马上要开啦！开！开！开！");
-                    broadcast("本轮产生点数为"+randnum+"点");
-                    next=resultcal();
-                }
+                stopwager=true;
+                broadcast("停止下注啦！都不要动啦！马上要开啦！开！开！开！");
+                broadcast("本轮产生点数为"+randnum+"点");
+                next=resultcal();
             }
             quitserver();
         }
@@ -107,7 +107,10 @@ public class Gameserver {
         System.out.println(randnum+"点");
         broadcast("-----------------------------------");
         broadcast("开始啦！大家快下注啦！赌大小啊！翻倍赢啊！");
-        for(Task thread: threadList ){
+        List<Task> threadListtemp = new ArrayList<Task>();
+        for(Task thread: threadList)
+            threadListtemp.add(thread);
+        for(Task thread: threadListtemp ){
             thread.wagerchip=0;
             thread.sendMsg("您有"+thread.chip+"个筹码，请下注：");
         }
@@ -193,7 +196,10 @@ public class Gameserver {
      * @param msg
      */
     void broadcast(String msg){
-        for(Task thread:threadList)
+        List<Task> threadListtemp = new ArrayList<Task>();
+        for(Task thread: threadList)
+            threadListtemp.add(thread);
+        for(Task thread:threadListtemp)
             thread.sendMsg(msg);
     }
     
@@ -203,7 +209,10 @@ public class Gameserver {
      * @param msg,one
      */
     void broadnotone(String msg,Task one){
+        List<Task> threadListtemp = new ArrayList<Task>();
         for(Task thread: threadList)
+            threadListtemp.add(thread);
+        for(Task thread: threadListtemp)
             if(thread!=one)
                 thread.sendMsg(msg);
     }
@@ -246,18 +255,19 @@ public class Gameserver {
                     else if(msg.equals(END_MARK)){
                         sendMsg("quit");
                         if(quit()){
-                            broadcast(username+"悄悄的走了，不带走一个筹码1。"); 
+                            broadcast(username+"悄悄的走了，不带走一个筹码。"); 
                         }
                         break;
                     }
                     else{
-                        synchronized(gameserver){
+                        if(!stopwager)
                             game(msg);
-                        }
+                        else
+                            sendMsg("即将开盘，停止下注");
                     }
                 }catch(Exception e){
                     if(quit()){
-                        broadcast(username+"悄悄的走了，不带走一个筹码2。"); 
+                        broadcast(username+"悄悄的走了，不带走一个筹码。"); 
                     }
                     break;
                 }           
@@ -271,7 +281,7 @@ public class Gameserver {
                 sendwriter.flush();
             }catch(Exception e){
                 if(quit())
-                   broadcast(username+"悄悄的走了，不带走一个筹码3。"); 
+                   broadcast(username+"悄悄的走了，不带走一个筹码。"); 
                 
             }
         } 
