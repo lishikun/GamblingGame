@@ -23,7 +23,7 @@ public class Gameclient {
     private Writer sendwriter;//发送消息字符输出流
     private BufferedReader keyin;//接收键盘字符输入流
     private BufferedReader recevreader;//接收消息字符输入流；
-    private boolean quit_flag;
+    private boolean quit_flag;//是否已退出标志，是为true，否为false
     
     /**
      * Gameclient() 
