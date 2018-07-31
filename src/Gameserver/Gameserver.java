@@ -82,13 +82,17 @@ public class Gameserver {
             while(next)
             {
                 begin();
-                stopwager=false;
+                synchronized(gameserver){
+                    stopwager=false;
+                }  
                 try{
                 sleep(30000);
                 }catch(Exception e){
                     e.printStackTrace();
                 }
-                stopwager=true;
+                synchronized(gameserver){
+                    stopwager=true;
+                } 
                 broadcast("停止下注啦！都不要动啦！马上要开啦！开！开！开！");
                 broadcast("本轮产生点数为"+randnum+"点");
                 next=resultcal();
@@ -269,7 +273,11 @@ public class Gameserver {
                         break;
                     }
                     else{//否则执行游戏函数
-                        if(!stopwager)
+                        boolean can;
+                        synchronized(gameserver){
+                            can=!stopwager;
+                        }
+                        if(can)
                             game(msg);
                         else
                             sendMsg("即将开盘，停止下注");
