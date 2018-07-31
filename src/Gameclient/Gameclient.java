@@ -89,7 +89,7 @@ public class Gameclient {
      * quit()
      * 退出函数
      */
-    private synchronized void  quit(){
+    private synchronized void quit(){
         if(quit_flag!=true){
             quit_flag=true;
             try{
