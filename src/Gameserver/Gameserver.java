@@ -92,7 +92,12 @@ public class Gameserver {
                 }
                 synchronized(gameserver){
                     stopwager=true;
-                } 
+                }
+               try{
+                sleep(100);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
                 broadcast("停止下注啦！都不要动啦！马上要开啦！开！开！开！");
                 broadcast("本轮产生点数为"+randnum+"点");
                 next=resultcal();
