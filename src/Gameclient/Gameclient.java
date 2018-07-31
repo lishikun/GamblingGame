@@ -93,10 +93,10 @@ public class Gameclient {
         if(quit_flag!=true){
             quit_flag=true;
             try{
-                    if(keyin!=null){keyin.close();}
-                    if(recevreader!=null)recevreader.close();
-                    if(sendwriter!=null)sendwriter.close();
-                    if(gamesocket!=null)gamesocket.close();
+                    keyin.close();
+                    recevreader.close();
+                    sendwriter.close();
+                    gamesocket.close();
                 }catch(Exception ex){
                         ex.printStackTrace();
                 }
