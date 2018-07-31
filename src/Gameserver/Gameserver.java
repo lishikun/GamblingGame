@@ -107,11 +107,11 @@ public class Gameserver {
         System.out.println(randnum+"点");
         broadcast("-----------------------------------");
         broadcast("开始啦！大家快下注啦！赌大小啊！翻倍赢啊！");
-        List<Task> threadListtemp = new ArrayList<Task>();
-        threadListtemp.addAll(threadList);
-        for(Task thread: threadListtemp ){
-            thread.wagerchip=0;
-            thread.sendMsg("您有"+thread.chip+"个筹码，请下注：");
+        synchronized(gameserver){
+            for(Task thread: threadList ){
+                thread.wagerchip=0;
+                thread.sendMsg("您有"+thread.chip+"个筹码，请下注：");
+            }
         }
     }   
     /**
@@ -121,7 +121,9 @@ public class Gameserver {
     boolean resultcal(){
         int detchip=0;
         List<Task> threadListtemp = new ArrayList<Task>();
-        threadListtemp.addAll(threadList);
+        synchronized(gameserver){
+            threadListtemp.addAll(threadList);
+        }
         if(randnum>3){
             for(Task thread: threadListtemp){
                 int userwager=thread.wagerchip;
@@ -179,11 +181,13 @@ public class Gameserver {
         if(totalchip<=0){
             broadcast("庄家运气怎么这么差，竟然输光了，掀桌子不玩儿了！大家散场啦！");
             threadListtemp.clear();
-            threadListtemp.addAll(threadList);
-            for(Task thread: threadListtemp){
-                thread.sendMsg("quit");
-                thread.quit();
+            synchronized(gameserver){
+                threadListtemp.addAll(threadList);
             }
+                for(Task thread: threadListtemp){
+                    thread.sendMsg("quit");
+                    thread.quit();
+                }
             return false;
         }
         else
@@ -195,10 +199,10 @@ public class Gameserver {
      * @param msg
      */
     void broadcast(String msg){
-        List<Task> threadListtemp = new ArrayList<Task>();
-        threadListtemp.addAll(threadList);
-        for(Task thread:threadList)
-            thread.sendMsg(msg);
+        synchronized(gameserver){
+            for(Task thread:threadList)
+                thread.sendMsg(msg);
+        }
     }
     
     /**
@@ -207,11 +211,11 @@ public class Gameserver {
      * @param msg,one
      */
     void broadnotone(String msg,Task one){
-        List<Task> threadListtemp = new ArrayList<Task>();
-        threadListtemp.addAll(threadList);
-        for(Task thread: threadList)
-            if(thread!=one)
-                thread.sendMsg(msg);
+        synchronized(gameserver){
+            for(Task thread: threadList)
+                if(thread!=one)
+                    thread.sendMsg(msg);
+        }
     }
     
     /**
@@ -306,8 +310,10 @@ public class Gameserver {
                 sendMsg("用户名已经存在，请更换一个新名字：");
             else{
                 username=msg;
-                userSet.add(msg);
-                threadList.add(this);
+                synchronized(gameserver){
+                    userSet.add(msg);
+                    threadList.add(this);
+                }
                 sendMsg("您有100个筹码，请下注：");
             }
         }
@@ -316,23 +322,23 @@ public class Gameserver {
          * 退出函数，返回值为之前是否已经退出
          * @return 
          */
-        private synchronized boolean quit(){ 
-            if(quit_flag!=true){
-                quit_flag=true;
-                if(userSet.contains(username))userSet.remove(username);
-                if(threadList.contains(this))threadList.remove(this);
-                try{
-                    sendwriter.close();
-                    recevreader.close();
-                }catch(Exception ex){
-                    ex.printStackTrace();
+        private boolean quit(){
+            synchronized(gameserver){
+                if(quit_flag!=true){
+                    quit_flag=true;
+                    if(userSet.contains(username))userSet.remove(username);
+                    if(threadList.contains(this))threadList.remove(this);
+                    try{
+                        sendwriter.close();
+                        recevreader.close();
+                    }catch(Exception ex){
+                        ex.printStackTrace();
+                    }
+                    return true;
                 }
-                return true;
+                else
+                    return false;
             }
-            else
-                return false;
-
-            
         }
         
         /**
